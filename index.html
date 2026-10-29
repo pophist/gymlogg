@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gymlogg">
+<title>Gymlogg</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0a0a0a;color:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:480px;margin:0 auto;padding-bottom:40px}
+.nav{display:flex;border-bottom:1px solid #1a1a1a;position:sticky;top:0;background:#0a0a0a;z-index:10}
+.nav button{flex:1;padding:14px 6px;background:none;border:none;border-bottom:2px solid transparent;color:#555;font-size:12px;font-family:inherit;cursor:pointer}
+.nav button.active{color:#4ade80;border-bottom-color:#4ade80}
+.header{padding:20px 16px 8px;display:flex;justify-content:space-between;align-items:flex-end}
+.header h1{font-size:24px;font-weight:700}
+.status{font-size:11px;color:#555;padding-bottom:4px}
+.pass-row{display:flex;gap:6px;padding:8px 16px;align-items:center}
+.date-input{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;color:#aaa;font-size:13px;padding:7px 10px;font-family:inherit;flex:1}
+.pass-btn{padding:7px 14px;border-radius:6px;border:1px solid #2a2a2a;background:#1a1a1a;color:#777;font-size:13px;font-family:inherit;cursor:pointer}
+.pass-btn.active{background:#1a3a1a;border-color:#4ade80;color:#4ade80;font-weight:600}
+.progress-wrap{padding:4px 16px 10px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:4px}
+.progress-bar{height:4px;background:#1a1a1a;border-radius:2px}
+.progress-fill{height:100%;background:#4ade80;border-radius:2px;transition:width .3s}
+.pass-note{margin:0 16px 10px;padding:8px 12px;background:#111;border:1px solid #1a1a1a;border-radius:8px;font-size:12px;color:#555}
+.exercises{padding:0 16px}
+.ex-card{background:#141414;border:1px solid #252525;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.ex-card.done{background:#0f2010;border-color:#2d5a2d}
+.ex-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer}
+.ex-name{font-weight:600;font-size:15px;color:#f0f0f0}
+.ex-card.done .ex-name{color:#4ade80}
+.ex-setup{font-size:11px;color:#555;margin-top:2px}
+.ex-badge{font-size:12px;background:#1a1a1a;padding:2px 8px;border-radius:20px;color:#666;margin-right:6px}
+.ex-card.done .ex-badge{color:#4ade80}
+.ex-body{padding:0 14px 14px;display:block}
+.set-header-row{display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:6px;margin-bottom:4px}
+.set-header-row span{font-size:11px;color:#444;text-align:center}
+.set-row{display:grid;grid-template-columns:24px 1fr 1fr 36px;gap:6px;align-items:center;margin-bottom:6px}
+.set-num{font-size:12px;color:#555;text-align:center}
+.input-wrap{position:relative}
+.input-wrap input{width:100%;padding:7px 26px 7px 8px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;color:#f0f0f0;font-size:15px;font-family:inherit}
+.unit{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;color:#555;pointer-events:none}
+.check-btn{width:30px;height:30px;border-radius:50%;border:2px solid #333;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-btn.checked{background:#4ade80;border-color:#4ade80}
+.set-actions{display:flex;gap:6px;margin-top:8px}
+.small-btn{background:#1a1a1a;border:1px solid #2a2a2a;color:#666;border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.ex-note{width:100%;margin-top:10px;background:#111;border:1px solid #1e1e1e;border-radius:6px;color:#888;font-size:13px;padding:8px;resize:none;font-family:inherit}
+.offline-banner{background:#1a1010;border:1px solid #5a2a2a;border-radius:8px;margin:0 16px 10px;padding:8px 12px;font-size:12px;color:#f87171;display:none}
+.hist-wrap{padding:16px}
+.hist-entry{background:#141414;border:1px solid #252525;border-radius:10px;margin-bottom:10px;padding:12px 14px}
+.hist-row{display:flex;justify-content:space-between;margin-bottom:8px}
+.hist-date{font-weight:600}
+.hist-pass{font-size:13px;color:#666}
+.hist-ex{margin-bottom:6px}
+.hist-ex-name{font-size:13px;color:#bbb;font-weight:500;margin-bottom:2px}
+.hist-sets{font-size:12px;color:#555;margin-bottom:2px}
+.hist-note{font-size:11px;color:#444;font-style:italic}
+.stats-wrap{padding:16px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:#141414;border:1px solid #252525;border-radius:10px;padding:14px}
+.stat-val{font-size:28px;font-weight:700;color:#4ade80}
+.stat-label{font-size:12px;color:#555;margin-top:2px}
+.section-title{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.pr-row{background:#141414;border:1px solid #252525;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.pr-name{font-size:13px;color:#ddd;font-weight:500}
+.pr-val{font-size:18px;font-weight:700;color:#4ade80;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="nav">
+  <button class="active" onclick="showTab('log')" id="nav-log">Pass</button>
+  <button onclick="showTab('history')" id="nav-history">Historik</button>
+  <button onclick="showTab('stats')" id="nav-stats">Statistik</button>
+</div>
+<div id="tab-log">
+  <div class="header">
+    <div>
+      <div style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.08em">Träningslogg</div>
+      <h1 id="pass-title">Pass 1</h1>
+    </div>
+    <div class="status" id="save-status"></div>
+  </div>
+  <div class="offline-banner" id="offline-banner">Kan inte nå servern</div>
+  <div class="pass-row">
+    <input type="date" class="date-input" id="session-date">
+    <button class="pass-btn active" id="btn-p1" onclick="selectPass('Pass 1')">Pass 1</button>
+    <button class="pass-btn" id="btn-p2" onclick="selectPass('Pass 2')">Pass 2</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Framsteg</span><span id="progress-text">0/0 set</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="pass-note" id="pass-note"></div>
+  <div class="exercises" id="exercises"></div>
+</div>
+<div id="tab-history" style="display:none">
+  <div class="header"><div><div style="font-size:11px;color:#555;text-transform:uppercase">Historik</div><h1>Historik</h1></div></div>
+  <div class="hist-wrap" id="history-content"></div>
+</div>
+<div id="tab-stats" style="display:none">
+  <div class="header"><div><div style="font-size:11px;color:#555;text-transform:uppercase">Statistik</div><h1>Statistik</h1></div></div>
+  <div class="stats-wrap" id="stats-content"></div>
+</div>
+<script>
+// =====================================================
+// JSONBin.io konfiguration
+// Fyll i BIN_ID efter att du skapat binet (se README)
+// =====================================================
+var BIN_ID = "6ae32c58ac6210605a5bad7a";
+var MASTER_KEY = "$2a$10$3SrEpDREd9vkcX8YR3fmve/tJH2nXaahlUjRHqkP0pW6mOQAxtv/C";
+var JSONBIN_URL = "https://api.jsonbin.io/v3/b/" + BIN_ID;
+
+var WORKOUTS = {
+  "Pass 1": {note:"Uppvarmning 5 min trappmaskin", exercises:[
+    {id:"leg_press",name:"Seated Leg Press",setup:"Sits 6",weight:85,reps:10,sets:3},
+    {id:"row",name:"Row",setup:"Sits 4, Hal 1, Handflata mot dig",weight:40,reps:10,sets:3},
+    {id:"chest_press",name:"Chest Press",setup:"Sits 5, Lage E",weight:33,reps:10,sets:3},
+    {id:"roman_chair",name:"Roman Chair Ryggresning",setup:"",weight:8,reps:10,sets:3},
+    {id:"leg_curl_p1",name:"Leg Curl liggande",setup:"Knapp i linje med vit prick, Installning L A",weight:54,reps:10,sets:3}
+  ]},
+  "Pass 2": {note:"Uppvarmning 5 min trappmaskin. Mal 3x10 innan du hojer.", exercises:[
+    {id:"seated_leg_curl",name:"Seated Leg Curl",setup:"Sits 8, Lage E, Fotkudde L",weight:47,reps:10,sets:3},
+    {id:"leg_extension",name:"Seated Leg Extension",setup:"Sits 8, Installning L E byt till XL",weight:47,reps:10,sets:3},
+    {id:"shoulder_press",name:"Shoulder Press",setup:"Sits 9, Handflata framat",weight:7.5,reps:10,sets:3},
+    {id:"lats_drag",name:"Lats Drag",setup:"Installning C",weight:33,reps:10,sets:3},
+    {id:"romanian_dl",name:"Rumanska Marklyft KB",setup:"Langsam excentrisk. Kg per hand.",weight:12,reps:10,sets:3}
+  ]}
+};
+
+var log = {};
+var currentPass = "Pass 1";
+var currentDate = todayStr();
+var sessionData = {};
+var saveTimer = null;
+
+function todayStr() {
+  var d = new Date();
+  // Använd lokal tid (inte UTC) för att undvika datumfel vid natt
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,"0");
+  var day = String(d.getDate()).padStart(2,"0");
+  return y + "-" + m + "-" + day;
+}
+
+function setStatus(s) {
+  var el = document.getElementById("save-status");
+  el.className = "status";
+  el.textContent = s === "saving" ? "sparar..." : s === "saved" ? "sparat ✓" : "";
+  el.style.color = s === "saved" ? "#4ade80" : "#888";
+}
+
+async function loadData() {
+  if (BIN_ID === "6ae32c58ac6210605a5bad7a") {
+    document.getElementById("offline-banner").textContent = "⚠️ BIN_ID inte konfigurerat – se instruktioner";
+    document.getElementById("offline-banner").style.display = "block";
+    return;
+  }
+  try {
+    var r = await fetch(JSONBIN_URL + "/latest", {
+      headers: { "X-Master-Key": MASTER_KEY }
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    var json = await r.json();
+    log = json.record || {};
+    document.getElementById("offline-banner").style.display = "none";
+  } catch(e) {
+    log = {};
+    document.getElementById("offline-banner").textContent = "Kan inte nå databasen – arbetar offline";
+    document.getElementById("offline-banner").style.display = "block";
+  }
+}
+
+async function saveData() {
+  if (BIN_ID === "6ae32c58ac6210605a5bad7a") return;
+  setStatus("saving");
+  try {
+    var r = await fetch(JSONBIN_URL, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": MASTER_KEY
+      },
+      body: JSON.stringify(log)
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    setStatus("saved");
+    document.getElementById("offline-banner").style.display = "none";
+  } catch(e) {
+    setStatus("idle");
+    document.getElementById("offline-banner").textContent = "Fel vid sparning – försök igen";
+    document.getElementById("offline-banner").style.display = "block";
+  }
+  setTimeout(function(){ setStatus("idle"); }, 2000);
+}
+
+function autoSave() {
+  log[currentDate] = {pass: currentPass, exercises: JSON.parse(JSON.stringify(sessionData))};
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveData, 800);
+}
+
+function lastSessionOfPass(pass, beforeDate) {
+  var entries = Object.entries(log).filter(function(e){ return e[1].pass === pass && e[0] < beforeDate; });
+  entries.sort(function(a,b){ return b[0].localeCompare(a[0]); });
+  return entries.length > 0 ? entries[0] : null;
+}
+
+function getDefaultSets(exId, dw, dr, ds) {
+  var last = lastSessionOfPass(currentPass, currentDate);
+  if (last) {
+    var lastEx = last[1].exercises[exId];
+    if (lastEx && lastEx.sets && lastEx.sets.length > 0) {
+      return lastEx.sets.map(function(s, i){ return {setNum:i+1, weight:s.weight, reps:s.reps, done:false}; });
+    }
+  }
+  var result = [];
+  for (var i = 0; i < ds; i++) { result.push({setNum:i+1, weight:dw, reps:dr, done:false}); }
+  return result;
+}
+
+function loadSession(date) {
+  var e = log[date];
+  if (e) {
+    currentPass = e.pass || "Pass 1";
+    sessionData = JSON.parse(JSON.stringify(e.exercises || {}));
+  } else {
+    sessionData = {};
+    var last = lastSessionOfPass(currentPass, date);
+    if (last) {
+      var lastEx = last[1].exercises;
+      Object.keys(lastEx).forEach(function(exId) {
+        if (lastEx[exId] && lastEx[exId].sets) {
+          sessionData[exId] = {
+            sets: lastEx[exId].sets.map(function(s, i){ return {setNum:i+1, weight:s.weight, reps:s.reps, done:false}; }),
+            note: ""
+          };
+        }
+      });
+    }
+  }
+  updatePassButtons();
+  renderExercises();
+}
+
+function selectPass(p) {
+  currentPass = p;
+  sessionData = {};
+  updatePassButtons();
+  renderExercises();
+}
+
+function updatePassButtons() {
+  document.getElementById("btn-p1").className = "pass-btn" + (currentPass === "Pass 1" ? " active" : "");
+  document.getElementById("btn-p2").className = "pass-btn" + (currentPass === "Pass 2" ? " active" : "");
+  document.getElementById("pass-title").textContent = currentPass;
+}
+
+function renderExercises() {
+  var w = WORKOUTS[currentPass];
+  document.getElementById("pass-note").textContent = w.note;
+  var container = document.getElementById("exercises");
+  container.innerHTML = "";
+  for (var i = 0; i < w.exercises.length; i++) {
+    var ex = w.exercises[i];
+    if (!sessionData[ex.id]) {
+      sessionData[ex.id] = {sets: getDefaultSets(ex.id, ex.weight, ex.reps, ex.sets), note: ""};
+    }
+    var card = buildCard(ex, sessionData[ex.id]);
+    container.appendChild(card);
+    renderSets(ex.id, sessionData[ex.id]);
+  }
+  updateProgress();
+}
+
+function buildCard(ex, exData) {
+  var dc = 0;
+  for (var i = 0; i < exData.sets.length; i++) { if (exData.sets[i].done) dc++; }
+  var allDone = dc === exData.sets.length;
+
+  var card = document.createElement("div");
+  card.className = "ex-card" + (allDone ? " done" : "");
+  card.id = "card-" + ex.id;
+
+  var header = document.createElement("div");
+  header.className = "ex-header";
+  header.onclick = (function(id){ return function(){ toggleCard(id); }; })(ex.id);
+  header.innerHTML = '<div><div class="ex-name">' + ex.name + '</div>' +
+    (ex.setup ? '<div class="ex-setup">' + ex.setup + '</div>' : '') + '</div>' +
+    '<div style="display:flex;align-items:center">' +
+    '<span class="ex-badge" id="badge-' + ex.id + '">' + dc + '/' + exData.sets.length + '</span>' +
+    '<span style="color:#555;font-size:12px">&#9662;</span></div>';
+  card.appendChild(header);
+
+  var body = document.createElement("div");
+  body.className = "ex-body";
+  body.id = "body-" + ex.id;
+  body.style.display = "block";
+
+  var setHeader = document.createElement("div");
+  setHeader.className = "set-header-row";
+  setHeader.innerHTML = "<span></span><span>Vikt</span><span>Reps</span><span style='text-align:center'>OK</span>";
+  body.appendChild(setHeader);
+
+  var setsDiv = document.createElement("div");
+  setsDiv.id = "sets-" + ex.id;
+  body.appendChild(setsDiv);
+
+  var actions = document.createElement("div");
+  actions.className = "set-actions";
+  actions.innerHTML = '<button class="small-btn" onclick="removeSet(\'' + ex.id + '\')">- Set</button>' +
+    '<button class="small-btn" onclick="addSet(\'' + ex.id + '\',' + ex.weight + ',' + ex.reps + ')">+ Set</button>';
+  body.appendChild(actions);
+
+  var note = document.createElement("textarea");
+  note.className = "ex-note";
+  note.rows = 2;
+  note.placeholder = "Anteckning...";
+  note.value = exData.note || "";
+  note.onchange = (function(id){ return function(){ updateNote(id, this.value); }; })(ex.id);
+  body.appendChild(note);
+
+  card.appendChild(body);
+  return card;
+}
+
+function renderSets(exId, exData) {
+  if (!exData) exData = sessionData[exId];
+  if (!exData || !exData.sets) return;
+  var container = document.getElementById("sets-" + exId);
+  if (!container) return;
+  container.innerHTML = "";
+  for (var idx = 0; idx < exData.sets.length; idx++) {
+    var set = exData.sets[idx];
+    var row = document.createElement("div");
+    row.className = "set-row";
+
+    var numDiv = document.createElement("div");
+    numDiv.className = "set-num";
+    numDiv.textContent = idx + 1;
+    row.appendChild(numDiv);
+
+    var wWrap = document.createElement("div");
+    wWrap.className = "input-wrap";
+    var wInput = document.createElement("input");
+    wInput.type = "number";
+    wInput.value = set.weight;
+    wInput.step = "2.5";
+    wInput.setAttribute("inputmode","decimal");
+    wInput.onchange = (function(id,i){ return function(){ updateSet(id,i,'weight',this.value); }; })(exId,idx);
+    wWrap.appendChild(wInput);
+    var wUnit = document.createElement("span");
+    wUnit.className = "unit";
+    wUnit.textContent = "kg";
+    wWrap.appendChild(wUnit);
+    row.appendChild(wWrap);
+
+    var rWrap = document.createElement("div");
+    rWrap.className = "input-wrap";
+    var rInput = document.createElement("input");
+    rInput.type = "number";
+    rInput.value = set.reps;
+    rInput.setAttribute("inputmode","numeric");
+    rInput.onchange = (function(id,i){ return function(){ updateSet(id,i,'reps',this.value); }; })(exId,idx);
+    rWrap.appendChild(rInput);
+    var rUnit = document.createElement("span");
+    rUnit.className = "unit";
+    rUnit.textContent = "rep";
+    rWrap.appendChild(rUnit);
+    row.appendChild(rWrap);
+
+    var btn = document.createElement("button");
+    btn.className = "check-btn" + (set.done ? " checked" : "");
+    btn.innerHTML = set.done ? "&#10003;" : "";
+    btn.onclick = (function(id,i){ return function(){ toggleSet(id,i); }; })(exId,idx);
+    row.appendChild(btn);
+
+    container.appendChild(row);
+  }
+}
+
+function toggleCard(exId) {
+  var b = document.getElementById("body-" + exId);
+  b.style.display = b.style.display === "none" ? "block" : "none";
+}
+
+function toggleSet(exId, idx) {
+  sessionData[exId].sets[idx].done = !sessionData[exId].sets[idx].done;
+  renderSets(exId);
+  updateCardState(exId);
+  updateProgress();
+  autoSave();
+}
+
+function updateSet(exId, idx, field, val) {
+  sessionData[exId].sets[idx][field] = parseFloat(val) || val;
+  autoSave();
+}
+
+function updateNote(exId, val) {
+  if (sessionData[exId]) { sessionData[exId].note = val; autoSave(); }
+}
+
+function addSet(exId, dw, dr) {
+  var sets = sessionData[exId].sets;
+  var last = sets[sets.length-1];
+  sets.push({setNum:sets.length+1, weight:last.weight, reps:last.reps, done:false});
+  renderSets(exId);
+  updateCardState(exId);
+  updateProgress();
+  autoSave();
+}
+
+function removeSet(exId) {
+  var sets = sessionData[exId].sets;
+  if (sets.length <= 1) return;
+  sets.pop();
+  renderSets(exId);
+  updateCardState(exId);
+  updateProgress();
+  autoSave();
+}
+
+function updateCardState(exId) {
+  var ed = sessionData[exId];
+  var dc = 0;
+  for (var i = 0; i < ed.sets.length; i++) { if (ed.sets[i].done) dc++; }
+  var allDone = dc === ed.sets.length;
+  var card = document.getElementById("card-" + exId);
+  var badge = document.getElementById("badge-" + exId);
+  if (card) card.className = "ex-card" + (allDone ? " done" : "");
+  if (badge) badge.textContent = dc + "/" + ed.sets.length;
+}
+
+function updateProgress() {
+  var w = WORKOUTS[currentPass];
+  var total = 0, done = 0;
+  for (var i = 0; i < w.exercises.length; i++) {
+    var d = sessionData[w.exercises[i].id];
+    if (d) {
+      total += d.sets.length;
+      for (var j = 0; j < d.sets.length; j++) { if (d.sets[j].done) done++; }
+    }
+  }
+  document.getElementById("progress-text").textContent = done + "/" + total + " set";
+  document.getElementById("progress-fill").style.width = (total > 0 ? done/total*100 : 0) + "%";
+}
+
+function showTab(tab) {
+  ["log","history","stats"].forEach(function(t){
+    document.getElementById("tab-"+t).style.display = t === tab ? "block" : "none";
+    document.getElementById("nav-"+t).className = t === tab ? "active" : "";
+  });
+  if (tab === "history") renderHistory();
+  if (tab === "stats") renderStats();
+}
+
+function renderHistory() {
+  var entries = Object.entries(log).filter(function(e){ return e[1].pass && e[1].exercises; });
+  entries.sort(function(a,b){ return b[0].localeCompare(a[0]); });
+  entries = entries.slice(0,40);
+  var c = document.getElementById("history-content");
+  if (!entries.length) { c.innerHTML = '<p style="color:#555;font-size:14px">Inga pass.</p>'; return; }
+  c.innerHTML = entries.map(function(entry){
+    var date = entry[0], data = entry[1];
+    var w = WORKOUTS[data.pass];
+    if (!w) return "";
+    var exRows = w.exercises.map(function(ex){
+      var ed = data.exercises[ex.id];
+      if (!ed || !ed.sets) return "";
+      var ds = ed.sets.filter(function(s){ return s.done; });
+      return '<div class="hist-ex"><div class="hist-ex-name">'+ex.name+'</div>' +
+        '<div class="hist-sets">'+(ds.length ? ds.map(function(s){ return s.weight+"kg x"+s.reps; }).join("  ") : "-")+'</div>' +
+        (ed.note ? '<div class="hist-note">'+ed.note+'</div>' : '') + '</div>';
+    }).join("");
+    return '<div class="hist-entry"><div class="hist-row"><span class="hist-date">'+date+'</span><span class="hist-pass">'+data.pass+'</span></div>'+exRows+'</div>';
+  }).join("");
+}
+
+function renderStats() {
+  var entries = Object.entries(log).filter(function(e){ return e[1].pass && e[1].exercises; });
+  var bests = {};
+  entries.forEach(function(entry){
+    var w = WORKOUTS[entry[1].pass];
+    if (!w) return;
+    w.exercises.forEach(function(ex){
+      var ed = entry[1].exercises[ex.id];
+      if (!ed || !ed.sets) return;
+      ed.sets.filter(function(s){ return s.done; }).forEach(function(s){
+        if (!bests[ex.id] || s.weight > bests[ex.id].weight) bests[ex.id] = {weight:s.weight, name:ex.name};
+      });
+    });
+  });
+  var p1 = entries.filter(function(e){ return e[1].pass === "Pass 1"; }).length;
+  var p2 = entries.filter(function(e){ return e[1].pass === "Pass 2"; }).length;
+  document.getElementById("stats-content").innerHTML =
+    '<div class="stats-grid">' +
+    '<div class="stat-card"><div class="stat-val">'+entries.length+'</div><div class="stat-label">Totalt pass</div></div>' +
+    '<div class="stat-card"><div class="stat-val">'+p1+'</div><div class="stat-label">Pass 1</div></div>' +
+    '<div class="stat-card"><div class="stat-val">'+p2+'</div><div class="stat-label">Pass 2</div></div>' +
+    '</div><div class="section-title">Personliga rekord</div>' +
+    Object.values(bests).map(function(b){
+      return '<div class="pr-row"><div class="pr-name">'+b.name+'</div><div class="pr-val">'+b.weight+' kg</div></div>';
+    }).join("");
+}
+
+async function init() {
+  document.getElementById("session-date").value = todayStr();
+  currentDate = todayStr();
+  document.getElementById("session-date").addEventListener("change", function(e){
+    currentDate = e.target.value;
+    loadSession(currentDate);
+  });
+  await loadData();
+  loadSession(currentDate);
+}
+
+init();
+</script>
+</body>
+</html>
