@@ -152,7 +152,7 @@ function setStatus(s) {
 }
 
 async function loadData() {
-  if (BIN_ID === "6ae32c58ac6210605a5bad7a") {
+  if (BIN_ID === "FYLL_I_DIN_BIN_ID_HÄR") {
     document.getElementById("offline-banner").textContent = "⚠️ BIN_ID inte konfigurerat – se instruktioner";
     document.getElementById("offline-banner").style.display = "block";
     return;
@@ -173,7 +173,7 @@ async function loadData() {
 }
 
 async function saveData() {
-  if (BIN_ID === "6ae32c58ac6210605a5bad7a") return;
+  if (BIN_ID === "FYLL_I_DIN_BIN_ID_HÄR") return;
   setStatus("saving");
   try {
     var r = await fetch(JSONBIN_URL, {
